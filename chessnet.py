@@ -1,3 +1,10 @@
+import os
+import io
+import pathlib
+import shutil
+import kagglehub
+from PIL import Image
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -21,6 +28,9 @@ class NeuralNetwork(object):
     def _sigmoid(z: float | np.ndarray) -> float | np.ndarray:
         return 1.0/(1.0 + np.exp(-z))
 
+    def _array_from_image(img: Image.Image) -> np.ndarray:
+        return np.array(img).flatten().reshape(-1, 1) / 256
+
     def feedforward(self, in_values: np.ndarray) -> np.ndarray:
         '''The output of the network given an input
 
@@ -39,3 +49,37 @@ class NeuralNetwork(object):
         for weights, bias in zip(self.weights, self.biases): # Iterating over layers
             in_values = NeuralNetwork._sigmoid(weights.dot(in_values) + bias)
         return in_values
+
+
+DATA_PATH = pathlib.Path(r"/home/flak-zoso/.cache/kagglehub/datasets/s4lman/chess-pieces-dataset-85x85/versions/2/data")
+DATA_DESTINATION = pathlib.Path(r"./data")
+SPLIT = 0.8
+
+
+if __name__ == "__main__":
+    if not DATA_PATH.exists():
+        DATA_PATH = pathlib.Path(f'{kagglehub.dataset_download("s4lman/chess-pieces-dataset-85x85")}/data')
+    pieces: dict[str, list[bytes]] = {}
+    training: dict[str, list[bytes]] = {}
+    testing: dict[str, list[bytes]] = {}
+    try:
+        shutil.copytree(str(DATA_PATH), str(DATA_DESTINATION))
+    except FileExistsError:
+        pass
+    for piece in os.listdir(DATA_DESTINATION):
+        piece_path = DATA_DESTINATION / piece
+        pieces[piece] = []
+        for image in os.listdir(piece_path):
+            with open(str(piece_path / image), "rb") as file:
+                image = Image.open(io.BytesIO(file.read()))
+            image = image.convert("L")
+            image.format = "PNG"
+            pieces[piece].append(image)
+        training[piece] = pieces[piece][:int(SPLIT*len(pieces[piece]))]
+        testing[piece] = pieces[piece][:int((1 - SPLIT)*len(pieces[piece]))]
+    print(NeuralNetwork._array_from_image(testing["king"][0]))
+
+    chessnet = NeuralNetwork([85*85, 15, 15, 6])
+    array = NeuralNetwork._array_from_image(testing["bishop"][0])
+    output = chessnet.feedforward(array)
+    print(*zip(pieces.keys(), output))
