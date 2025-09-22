@@ -25,11 +25,17 @@ class NeuralNetwork(object):
             for y in self.layer_sizes[1:] # exclude first layer
         ]
 
-    def _sigmoid(z: float | np.ndarray) -> float | np.ndarray:
-        return 1.0/(1.0 + np.exp(-z))
+    def _sigmoid(z: np.ndarray) -> np.ndarray:
+        def _float_sigmoid(z_: float) -> float:
+            if z_ > 0:
+                return 1.0 / (1.0 + np.exp(-z_))
+            else:
+                tmp = np.exp(z_)
+                return tmp /(1.0 + tmp)
+        return [_float_sigmoid(z_) for z_ in z]
 
     def _array_from_image(img: Image.Image) -> np.ndarray:
-        return np.array(img).flatten().reshape(-1, 1) / 256
+        return np.array(img).flatten().reshape(-1, 1)
 
     def feedforward(self, in_values: np.ndarray) -> np.ndarray:
         '''The output of the network given an input
