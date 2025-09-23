@@ -1,3 +1,6 @@
+#/bin/env python3
+from __future__ import annotations
+
 import os
 import io
 import pathlib
@@ -24,6 +27,10 @@ class NeuralNetwork(object):
             np.random.randn(y, 1) # Random vector of biases 
             for y in self.layer_sizes[1:] # exclude first layer
         ]
+
+    @classmethod
+    def load(cls, directory: str) -> NeuralNetwork:
+        ...
 
     def _sigmoid(z: np.ndarray) -> np.ndarray:
         def _float_sigmoid(z_: float) -> float:
@@ -56,6 +63,17 @@ class NeuralNetwork(object):
             in_values = NeuralNetwork._sigmoid(weights.dot(in_values) + bias)
         return in_values
 
+    def save(self, path: str) -> None:
+        directory = pathlib.Path(path)
+        weights_dir = directory / "weights"
+        biases_dir = directory / "biases"
+        os.makedirs(str(weights_dir), exist_ok=True)
+        os.makedirs(str(biases_dir), exist_ok=True)
+        # https://numpy.org/doc/stable/reference/generated/numpy.save.html#numpy.save
+        for index, layer in zip(range(1, self.layers_number), self.biases):
+            np.save(weights_dir / f"{index}.npy", layer, allow_pickle=False)
+        for index, layer in enumerate(self.weights):
+            np.save(biases_dir / f"{index}.npy", layer, allow_pickle=False)
 
 DATA_PATH = pathlib.Path(r"/home/flak-zoso/.cache/kagglehub/datasets/s4lman/chess-pieces-dataset-85x85/versions/2/data")
 DATA_DESTINATION = pathlib.Path(r"./data")
@@ -64,7 +82,7 @@ SPLIT = 0.8
 
 if __name__ == "__main__":
     if not DATA_PATH.exists():
-        DATA_PATH = pathlib.Path(f'{kagglehub.dataset_download("s4lman/chess-pieces-dataset-85x85")}/data')
+        DATA_PATH = pathlib.Path(kagglehub.dataset_download("s4lman/chess-pieces-dataset-85x85")) / 'data'
     pieces: dict[str, list[bytes]] = {}
     training: dict[str, list[bytes]] = {}
     testing: dict[str, list[bytes]] = {}
@@ -89,3 +107,5 @@ if __name__ == "__main__":
     array = NeuralNetwork._array_from_image(testing["bishop"][0])
     output = chessnet.feedforward(array)
     print(*zip(pieces.keys(), output))
+
+    chessnet.save("testNet")
