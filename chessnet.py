@@ -13,24 +13,35 @@ import numpy as np
 
 class NeuralNetwork(object):
 
-    def __init__(self, layer_sizes: list[int]):
-        self.layers_number = len(layer_sizes)
-        self.layer_sizes = layer_sizes
-        self.weights: list[np.matrix] = [
-            np.random.randn(y, x)
-            for x, y in zip(
-                self.layer_sizes[:-1],
-                self.layer_sizes[1:]
-            )
-        ]
-        self.biases: list[np.ndarray] = [
-            np.random.randn(y, 1) # Random vector of biases 
-            for y in self.layer_sizes[1:] # exclude first layer
-        ]
+    def __init__(self, layer_sizes: list[int]=None):
+        if layer_sizes is not None:
+            self.layers_number = len(layer_sizes)
+            self.layer_sizes = layer_sizes
+            self.weights: list[np.matrix] = [
+                np.random.randn(y, x)
+                for x, y in zip(
+                    self.layer_sizes[:-1],
+                    self.layer_sizes[1:]
+                )
+            ]
+            self.biases: list[np.ndarray] = [
+                np.random.randn(y, 1) # Random vector of biases 
+                for y in self.layer_sizes[1:] # exclude first layer
+            ]
 
     @classmethod
-    def load(cls, directory: str) -> NeuralNetwork:
-        ...
+    def load(cls, directory: pathlib.Path) -> NeuralNetwork:
+        network = cls()
+        network.weights = []
+        for entry in sorted(os.listdir(directory / "weights")):
+            network.weights.append(np.load(directory / "weights" / entry))
+        print(network.weights)
+        network.layer_sizes = [len(rows) for rows in network.weights]
+        network.layers_number = len(network.weights)
+        network.biases = []
+        for entry in sorted(os.listdir(directory / "biases")):
+            network.biases.append(np.load(directory / "biases" / entry))
+        return network
 
     def _sigmoid(z: np.ndarray) -> np.ndarray:
         def _float_sigmoid(z_: float) -> float:
@@ -63,10 +74,9 @@ class NeuralNetwork(object):
             in_values = NeuralNetwork._sigmoid(weights.dot(in_values) + bias)
         return in_values
 
-    def save(self, path: str) -> None:
-        directory = pathlib.Path(path)
-        weights_dir = directory / "weights"
-        biases_dir = directory / "biases"
+    def save(self, path: pathlib.Path) -> None:
+        weights_dir = path / "weights"
+        biases_dir = path / "biases"
         os.makedirs(str(weights_dir), exist_ok=True)
         os.makedirs(str(biases_dir), exist_ok=True)
         # https://numpy.org/doc/stable/reference/generated/numpy.save.html#numpy.save
@@ -77,6 +87,7 @@ class NeuralNetwork(object):
 
 DATA_PATH = pathlib.Path(r"/home/flak-zoso/.cache/kagglehub/datasets/s4lman/chess-pieces-dataset-85x85/versions/2/data")
 DATA_DESTINATION = pathlib.Path(r"./data")
+SAVE_PATH = pathlib.Path(r"testNet")
 SPLIT = 0.8
 
 
@@ -103,9 +114,12 @@ if __name__ == "__main__":
         testing[piece] = pieces[piece][:int((1 - SPLIT)*len(pieces[piece]))]
     print(NeuralNetwork._array_from_image(testing["king"][0]))
 
-    chessnet = NeuralNetwork([85*85, 15, 15, 6])
+    if pathlib.Path(SAVE_PATH).exists():
+        chessnet = NeuralNetwork.load(SAVE_PATH)
+    else:
+        chessnet = NeuralNetwork([85*85, 15, 15, 6])
     array = NeuralNetwork._array_from_image(testing["bishop"][0])
     output = chessnet.feedforward(array)
     print(*zip(pieces.keys(), output))
 
-    chessnet.save("testNet")
+    chessnet.save(SAVE_PATH)
