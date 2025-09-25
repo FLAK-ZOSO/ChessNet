@@ -36,9 +36,11 @@ class NeuralNetwork(object):
         for entry in sorted(os.listdir(directory / "weights")):
             if entry.endswith(".npy"):
                 network.weights.append(np.load(directory / "weights" / entry))
-        print(network.weights)
-        network.layer_sizes = [len(rows) for rows in network.weights]
-        network.layers_number = len(network.weights)
+
+        network.layer_sizes = [network.weights[0].shape[1]] # Number of rows of the first weights set
+        for w in network.weights:
+            network.layer_sizes.append(w.shape[0]) # Append the size of each layer
+        network.layers_number = len(network.layer_sizes)
         network.biases = []
         for entry in sorted(os.listdir(directory / "biases")):
             if entry.endswith(".npy"):
