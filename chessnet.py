@@ -83,11 +83,11 @@ class NeuralNetwork(object):
     def costs(output: np.ndarray, correct: str | int, sorted_values: list[str]=None) -> list[int]:
         if isinstance(correct, str) and sorted_values is not None:
             correct: int = sorted_values.index(correct)
-        return [(output[i] - (1 if i == correct else 0))**2 for i in range(len(output))]
+        return [(output[i] - (1 if i == correct else 0)) for i in range(len(output))]
 
     @staticmethod
     def cost(output: np.ndarray, correct: str | int, sorted_values: list[str]=None) -> int:
-        return sum(NeuralNetwork.costs(output, correct, sorted_values))
+        return sum([x**2 for x in NeuralNetwork.costs(output, correct, sorted_values)])
 
     def save(self, path: pathlib.Path) -> None:
         weights_dir = path / "weights"
