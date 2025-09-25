@@ -81,9 +81,11 @@ class NeuralNetwork(object):
         os.makedirs(str(biases_dir), exist_ok=True)
         # https://numpy.org/doc/stable/reference/generated/numpy.save.html#numpy.save
         for index, layer in zip(range(1, self.layers_number), self.biases):
-            np.save(weights_dir / f"{index}.npy", layer, allow_pickle=False)
-        for index, layer in enumerate(self.weights):
             np.save(biases_dir / f"{index}.npy", layer, allow_pickle=False)
+            np.savetxt(biases_dir / f"{index}.csv", layer)
+        for index, layer in enumerate(self.weights):
+            np.save(weights_dir / f"{index}.npy", layer, allow_pickle=False)
+            np.savetxt(weights_dir / f"{index}.csv", layer)
 
 DATA_PATH = pathlib.Path(r"/home/flak-zoso/.cache/kagglehub/datasets/s4lman/chess-pieces-dataset-85x85/versions/2/data")
 DATA_DESTINATION = pathlib.Path(r"./data")
