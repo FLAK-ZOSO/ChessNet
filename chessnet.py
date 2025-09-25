@@ -5,6 +5,7 @@ import os
 import io
 import pathlib
 import shutil
+import random
 import kagglehub
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -55,7 +56,7 @@ class NeuralNetwork(object):
             else:
                 tmp = np.exp(z_)
                 return tmp / (1.0 + tmp)
-        return [_float_sigmoid(z_) for z_ in z]
+        return np.vectorize(_float_sigmoid)(z)
 
     @staticmethod
     def _sigmoid_prime(z: np.ndarray) -> np.ndarray:
@@ -84,6 +85,93 @@ class NeuralNetwork(object):
             in_values = NeuralNetwork._sigmoid(weights.dot(in_values) + bias)
         return in_values
 
+    def stochastic_gradient_descent(self, training_data, epochs, mini_batch_size, eta, sorted_values=None, test_data=None):
+        """Train the neural network using mini-batch stochastic
+        gradient descent.  The ``training_data`` is a list of tuples
+        ``(x, y)`` representing the training inputs and the desired
+        outputs.  The other non-optional parameters are
+        self-explanatory.  If ``test_data`` is provided then the
+        network will be evaluated against the test data after each
+        epoch, and partial progress printed out.  This is useful for
+        tracking progress, but slows things down substantially."""
+        if test_data: n_test = len(test_data)
+        n = len(training_data)
+        for j in range(epochs):
+            random.shuffle(training_data)
+            mini_batches = [
+                training_data[k:k+mini_batch_size]
+                for k in range(0, n, mini_batch_size)]
+            for mini_batch in mini_batches:
+                self.update_mini_batch(mini_batch, eta, sorted_values)
+            if test_data:
+                print("Epoch {0}: {1} / {2}".format(
+                    j, self.evaluate(test_data), n_test
+                ))
+            else:
+                print("Epoch {0} complete".format(j))
+
+    def update_mini_batch(self, mini_batch, eta, sorted_values=None):
+        """Update the network's weights and biases by applying
+        gradient descent using backpropagation to a single mini batch.
+        The ``mini_batch`` is a list of tuples ``(x, y)``, and ``eta``
+        is the learning rate."""
+        nabla_b = [np.zeros(b.shape) for b in self.biases]
+        nabla_w = [np.zeros(w.shape) for w in self.weights]
+        for x, y in mini_batch:
+            delta_nabla_b, delta_nabla_w = self.backprop(x, y, sorted_values)
+            nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
+            nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
+        self.weights = [w-(eta/len(mini_batch))*nw
+                        for w, nw in zip(self.weights, nabla_w)]
+        self.biases = [b-(eta/len(mini_batch))*nb
+                       for b, nb in zip(self.biases, nabla_b)]
+
+    def backprop(self, x, y, sorted_values=None):
+        """Return a tuple ``(nabla_b, nabla_w)`` representing the
+        gradient for the cost function C_x.  ``nabla_b`` and
+        ``nabla_w`` are layer-by-layer lists of numpy arrays, similar
+        to ``self.biases`` and ``self.weights``."""
+        nabla_b = [np.zeros(b.shape) for b in self.biases]
+        nabla_w = [np.zeros(w.shape) for w in self.weights]
+        # feedforward
+        activation = x
+        activations = [x] # list to store all the activations, layer by layer
+        zs = [] # list to store all the z vectors, layer by layer
+        for b, w in zip(self.biases, self.weights):
+            z = np.dot(w, activation)+b
+            zs.append(z)
+            activation = NeuralNetwork._sigmoid(z)
+            activations.append(activation)
+        # Convert y to one-hot vector if needed
+        if isinstance(y, str) and sorted_values is not None:
+            y_index = sorted_values.index(y)
+            y_vec = np.zeros((len(sorted_values), 1))
+            y_vec[y_index] = 1.0
+        else:
+            y_vec = y
+        # backward pass
+        delta = NeuralNetwork.cost_derivative(activations[-1], y_vec) * NeuralNetwork._sigmoid_prime(zs[-1])
+        nabla_b[-1] = delta
+        nabla_w[-1] = np.dot(delta, activations[-2].transpose())
+        for l in range(2, self.layers_number):
+            z = zs[-l]
+            sp = NeuralNetwork._sigmoid_prime(z)
+            delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
+            nabla_b[-l] = delta
+            nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
+        return (nabla_b, nabla_w)
+
+    def evaluate(self, test_data: list[tuple[np.ndarray, str | int]], sorted_values=None) -> int:
+        """Return the number of test inputs for which the neural
+        network outputs the correct result."""
+        if sorted_values is None:
+            raise ValueError("sorted_values (class names) must be provided for evaluation.")
+        test_results = [
+            (np.argmax(self.feedforward(x)), sorted_values.index(y) if isinstance(y, str) else y)
+            for (x, y) in test_data
+        ]
+        return sum(int(x == y) for (x, y) in test_results)
+
     @staticmethod
     def costs(output: np.ndarray, correct: str | int, sorted_values: list[str]=None) -> list[int]:
         if isinstance(correct, str) and sorted_values is not None:
@@ -93,6 +181,12 @@ class NeuralNetwork(object):
     @staticmethod
     def cost(output: np.ndarray, correct: str | int, sorted_values: list[str]=None) -> int:
         return sum([x**2 for x in NeuralNetwork.costs(output, correct, sorted_values)])
+
+    @staticmethod
+    def cost_derivative(output_activations, y):
+        """Return the vector of partial derivatives \partial C_x /
+        \partial a for the output activations."""
+        return (output_activations - y)
 
     def save(self, path: pathlib.Path) -> None:
         weights_dir = path / "weights"
@@ -123,7 +217,8 @@ if __name__ == "__main__":
         shutil.copytree(str(DATA_PATH), str(DATA_DESTINATION))
     except FileExistsError:
         pass
-    for piece in os.listdir(DATA_DESTINATION):
+    PIECE_NAMES = sorted([*os.listdir(DATA_DESTINATION)])
+    for piece in PIECE_NAMES:
         piece_path = DATA_DESTINATION / piece
         pieces[piece] = []
         for image in os.listdir(piece_path):
@@ -135,14 +230,38 @@ if __name__ == "__main__":
         training[piece] = pieces[piece][:int(SPLIT*len(pieces[piece]))]
         testing[piece] = pieces[piece][:int((1 - SPLIT)*len(pieces[piece]))]
     print(NeuralNetwork._array_from_image(testing["king"][0]))
+    testing_data: list[tuple[np.ndarray, str]] = []
+    for piece in PIECE_NAMES:
+        for image in testing[piece]:
+            testing_data.append((NeuralNetwork._array_from_image(image), piece))
 
     if pathlib.Path(SAVE_PATH).exists():
         chessnet = NeuralNetwork.load(SAVE_PATH)
     else:
         chessnet = NeuralNetwork([85*85, 15, 15, 6])
+    print(f"Test data evaluation: {chessnet.evaluate(testing_data, PIECE_NAMES)} / {len(testing_data)}")
     array = NeuralNetwork._array_from_image(testing["bishop"][0])
     output = chessnet.feedforward(array)
     print(*zip(pieces.keys(), output))
     print(NeuralNetwork.cost(output, "bishop"))
+
+    training_data: list[tuple[np.ndarray, str]] = []
+    for piece in PIECE_NAMES:
+        for image in training[piece]:
+            training_data.append((NeuralNetwork._array_from_image(image), piece))
+    chessnet.stochastic_gradient_descent(training_data, 30, 10, 0.1, PIECE_NAMES)
+
+    print(f"Test data evaluation: {chessnet.evaluate(testing_data, PIECE_NAMES)} / {len(testing_data)}")
+
+    for _ in range(5):
+        random_piece = random.choice(PIECE_NAMES)
+        random_image = random.choice(pieces[random_piece])
+        array = NeuralNetwork._array_from_image(random_image)
+        output = chessnet.feedforward(array)
+        print(f"Correct: {random_piece}")
+        print(*zip(PIECE_NAMES, output))
+        print(f"Cost: {NeuralNetwork.cost(output, random_piece, PIECE_NAMES)}")
+        plt.imshow(random_image, cmap='gray')
+        plt.show()
 
     chessnet.save(SAVE_PATH)
