@@ -47,6 +47,7 @@ class NeuralNetwork(object):
                 network.biases.append(np.load(directory / "biases" / entry))
         return network
 
+    @staticmethod
     def _sigmoid(z: np.ndarray) -> np.ndarray:
         def _float_sigmoid(z_: float) -> float:
             if z_ > 0:
@@ -77,6 +78,16 @@ class NeuralNetwork(object):
         for weights, bias in zip(self.weights, self.biases): # Iterating over layers
             in_values = NeuralNetwork._sigmoid(weights.dot(in_values) + bias)
         return in_values
+
+    @staticmethod
+    def costs(output: np.ndarray, correct: str | int, sorted_values: list[str]=None) -> list[int]:
+        if isinstance(correct, str) and sorted_values is not None:
+            correct: int = sorted_values.index(correct)
+        return [(output[i] - (1 if i == correct else 0))**2 for i in range(len(output))]
+
+    @staticmethod
+    def cost(output: np.ndarray, correct: str | int, sorted_values: list[str]=None) -> int:
+        return sum(NeuralNetwork.costs(output, correct, sorted_values))
 
     def save(self, path: pathlib.Path) -> None:
         weights_dir = path / "weights"
@@ -127,5 +138,6 @@ if __name__ == "__main__":
     array = NeuralNetwork._array_from_image(testing["bishop"][0])
     output = chessnet.feedforward(array)
     print(*zip(pieces.keys(), output))
+    print(NeuralNetwork.cost(output, "bishop"))
 
     chessnet.save(SAVE_PATH)
