@@ -34,13 +34,15 @@ class NeuralNetwork(object):
         network = cls()
         network.weights = []
         for entry in sorted(os.listdir(directory / "weights")):
-            network.weights.append(np.load(directory / "weights" / entry))
+            if entry.endswith(".npy"):
+                network.weights.append(np.load(directory / "weights" / entry))
         print(network.weights)
         network.layer_sizes = [len(rows) for rows in network.weights]
         network.layers_number = len(network.weights)
         network.biases = []
         for entry in sorted(os.listdir(directory / "biases")):
-            network.biases.append(np.load(directory / "biases" / entry))
+            if entry.endswith(".npy"):
+                network.biases.append(np.load(directory / "biases" / entry))
         return network
 
     def _sigmoid(z: np.ndarray) -> np.ndarray:
