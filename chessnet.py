@@ -54,8 +54,13 @@ class NeuralNetwork(object):
                 return 1.0 / (1.0 + np.exp(-z_))
             else:
                 tmp = np.exp(z_)
-                return tmp /(1.0 + tmp)
+                return tmp / (1.0 + tmp)
         return [_float_sigmoid(z_) for z_ in z]
+
+    @staticmethod
+    def _sigmoid_prime(z: np.ndarray) -> np.ndarray:
+        """Derivative of the sigmoid function."""
+        return NeuralNetwork._sigmoid(z)*(1-NeuralNetwork._sigmoid(z))
 
     def _array_from_image(img: Image.Image) -> np.ndarray:
         return np.array(img).flatten().reshape(-1, 1)
