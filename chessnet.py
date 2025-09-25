@@ -63,8 +63,9 @@ class NeuralNetwork(object):
         """Derivative of the sigmoid function."""
         return NeuralNetwork._sigmoid(z)*(1-NeuralNetwork._sigmoid(z))
 
+    @staticmethod
     def _array_from_image(img: Image.Image) -> np.ndarray:
-        return np.array(img).flatten().reshape(-1, 1)
+        return (np.array(img).astype(np.float32) / 255.0).flatten().reshape(-1, 1)
 
     def feedforward(self, in_values: np.ndarray) -> np.ndarray:
         '''The output of the network given an input
@@ -249,7 +250,11 @@ if __name__ == "__main__":
     for piece in PIECE_NAMES:
         for image in training[piece]:
             training_data.append((NeuralNetwork._array_from_image(image), piece))
-    chessnet.stochastic_gradient_descent(training_data, 30, 10, 0.1, PIECE_NAMES)
+    print("First layer weights before training:", chessnet.weights[0][:5, :5])
+    print("First layer biases before training:", chessnet.biases[0][:5])
+    chessnet.stochastic_gradient_descent(training_data, 30, 20, 0.5, PIECE_NAMES)
+    print("First layer weights after training:", chessnet.weights[0][:5, :5])
+    print("First layer biases after training:", chessnet.biases[0][:5])
 
     print(f"Test data evaluation: {chessnet.evaluate(testing_data, PIECE_NAMES)} / {len(testing_data)}")
 
