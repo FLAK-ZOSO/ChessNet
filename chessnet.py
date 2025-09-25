@@ -62,8 +62,9 @@ class NeuralNetwork(object):
         """Derivative of the sigmoid function."""
         return NeuralNetwork._sigmoid(z)*(1-NeuralNetwork._sigmoid(z))
 
+    @staticmethod
     def _array_from_image(img: Image.Image) -> np.ndarray:
-        return np.array(img).flatten().reshape(-1, 1)
+        return (np.array(img).astype(np.float32) / 255.0).flatten().reshape(-1, 1)
 
     def feedforward(self, in_values: np.ndarray) -> np.ndarray:
         '''The output of the network given an input
