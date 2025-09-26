@@ -239,7 +239,7 @@ if __name__ == "__main__":
     if pathlib.Path(SAVE_PATH).exists():
         chessnet = NeuralNetwork.load(SAVE_PATH)
     else:
-        chessnet = NeuralNetwork([85*85, 15, 15, 6])
+        chessnet = NeuralNetwork([85*85, 20, 25, 6])
     print(f"Test data evaluation: {chessnet.evaluate(testing_data, PIECE_NAMES)} / {len(testing_data)}")
     array = NeuralNetwork._array_from_image(testing["bishop"][0])
     output = chessnet.feedforward(array)
@@ -258,15 +258,15 @@ if __name__ == "__main__":
 
     print(f"Test data evaluation: {chessnet.evaluate(testing_data, PIECE_NAMES)} / {len(testing_data)}")
 
-    for _ in range(5):
-        random_piece = random.choice(PIECE_NAMES)
-        random_image = random.choice(pieces[random_piece])
-        array = NeuralNetwork._array_from_image(random_image)
-        output = chessnet.feedforward(array)
-        print(f"Correct: {random_piece}")
-        print(*zip(PIECE_NAMES, output))
-        print(f"Cost: {NeuralNetwork.cost(output, random_piece, PIECE_NAMES)}")
-        plt.imshow(random_image, cmap='gray')
-        plt.show()
+    # for _ in range(5):
+    #     random_piece = random.choice(PIECE_NAMES)
+    #     random_image = random.choice(pieces[random_piece])
+    #     array = NeuralNetwork._array_from_image(random_image)
+    #     output = chessnet.feedforward(array)
+    #     print(f"Correct: {random_piece}")
+    #     print(*zip(PIECE_NAMES, output))
+    #     print(f"Cost: {NeuralNetwork.cost(output, random_piece, PIECE_NAMES)}")
+    #     plt.imshow(random_image, cmap='gray')
+    #     plt.show()
 
     chessnet.save(SAVE_PATH)
