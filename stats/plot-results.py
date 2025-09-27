@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 from matplotlib import ticker as tkr
 import numpy as np
 
-data = np.loadtxt("results.csv", dtype=int, delimiter=',')
+data = np.loadtxt("results.csv", dtype=float, delimiter=',')
 print(data)
 
 plt.figure(figsize=(10, 6))
