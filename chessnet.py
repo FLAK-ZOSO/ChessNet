@@ -229,7 +229,7 @@ if __name__ == "__main__":
             image.format = "PNG"
             pieces[piece].append(image)
         training[piece] = pieces[piece][:int(SPLIT*len(pieces[piece]))]
-        testing[piece] = pieces[piece][:int((1 - SPLIT)*len(pieces[piece]))]
+        testing[piece] = pieces[piece][int(SPLIT*len(pieces[piece])):]
     print(NeuralNetwork._array_from_image(testing["king"][0]))
     testing_data: list[tuple[np.ndarray, str]] = []
     for piece in PIECE_NAMES:
