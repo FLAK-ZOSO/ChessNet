@@ -109,7 +109,8 @@ class NeuralNetwork(object):
                     j, self.evaluate(test_data), n_test
                 ))
             else:
-                print("Epoch {0} complete".format(j))
+                print("\rEpoch {0} complete".format(j), end='')
+        print()
 
     def update_mini_batch(self, mini_batch, eta, sorted_values=None):
         """Update the network's weights and biases by applying
@@ -260,24 +261,10 @@ if __name__ == "__main__":
     for piece in PIECE_NAMES:
         for image in training[piece]:
             training_data.append((NeuralNetwork._array_from_image(image), piece))
-    print("First layer weights before training:", chessnet.weights[0][:5, :5])
-    print("First layer biases before training:", chessnet.biases[0][:5])
     chessnet.stochastic_gradient_descent(training_data, 30, 20, 0.5, PIECE_NAMES)
-    print("First layer weights after training:", chessnet.weights[0][:5, :5])
-    print("First layer biases after training:", chessnet.biases[0][:5])
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
-    print(f"Test data evaluation: {evaluate} / {len(testing_data)} = {evaluate / len(testing_data) * 100}")
-
-    # for _ in range(5):
-    #     random_piece = random.choice(PIECE_NAMES)
-    #     random_image = random.choice(pieces[random_piece])
-    #     array = NeuralNetwork._array_from_image(random_image)
-    #     output = chessnet.feedforward(array)
-    #     print(f"Correct: {random_piece}")
-    #     print(*zip(PIECE_NAMES, output))
-    #     print(f"Cost: {NeuralNetwork.cost(output, random_piece, PIECE_NAMES)}")
-    #     plt.imshow(random_image, cmap='gray')
-    #     plt.show()
+    percentage = evaluate / len(testing_data) * 100
+    print(f"Test data evaluation: {evaluate} / {len(testing_data)} = {percentage:.2f}%")
 
     chessnet.save(SAVE_PATH)
