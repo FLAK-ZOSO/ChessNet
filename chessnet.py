@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import io
+import time
 import pathlib
 import shutil
 import random
@@ -210,6 +211,7 @@ SPLIT = 0.8
 
 
 if __name__ == "__main__":
+    np.random.seed(int(time.time()))
     if not DATA_PATH.exists():
         DATA_PATH = pathlib.Path(kagglehub.dataset_download("s4lman/chess-pieces-dataset-85x85")) / 'data'
     pieces: dict[str, list[bytes]] = {}
@@ -256,7 +258,7 @@ if __name__ == "__main__":
     for piece in PIECE_NAMES:
         for image in training[piece]:
             training_data.append((NeuralNetwork._array_from_image(image), piece))
-    chessnet.stochastic_gradient_descent(training_data, 30, 20, 0.5, PIECE_NAMES)
+    chessnet.stochastic_gradient_descent(training_data, 10, 20, 1, PIECE_NAMES)
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
     percentage = evaluate / len(testing_data) * 100
