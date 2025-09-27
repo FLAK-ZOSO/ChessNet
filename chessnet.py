@@ -240,7 +240,17 @@ if __name__ == "__main__":
         chessnet = NeuralNetwork.load(SAVE_PATH)
     else:
         chessnet = NeuralNetwork([85*85, 20, 25, 6])
-    print(f"Test data evaluation: {chessnet.evaluate(testing_data, PIECE_NAMES)} / {len(testing_data)}")
+
+    evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
+    percentage = evaluate / len(testing_data) * 100
+    print(f"Test data evaluation: {evaluate} / {len(testing_data)} = {percentage:.2f}%")
+    if pathlib.Path("stats/results.csv").exists():
+        with open("stats/results.csv", "a") as file:
+            file.write(f", {percentage}")
+    else:
+        with open("stats/results.csv", "w") as file:
+            file.write(str(percentage))
+
     array = NeuralNetwork._array_from_image(testing["bishop"][0])
     output = chessnet.feedforward(array)
     print(*zip(pieces.keys(), output))
@@ -256,7 +266,8 @@ if __name__ == "__main__":
     print("First layer weights after training:", chessnet.weights[0][:5, :5])
     print("First layer biases after training:", chessnet.biases[0][:5])
 
-    print(f"Test data evaluation: {chessnet.evaluate(testing_data, PIECE_NAMES)} / {len(testing_data)}")
+    evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
+    print(f"Test data evaluation: {evaluate} / {len(testing_data)} = {evaluate / len(testing_data) * 100}")
 
     # for _ in range(5):
     #     random_piece = random.choice(PIECE_NAMES)
