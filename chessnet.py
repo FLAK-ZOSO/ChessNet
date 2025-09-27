@@ -268,3 +268,4 @@ if __name__ == "__main__":
     print(f"Test data evaluation: {evaluate} / {len(testing_data)} = {percentage:.2f}%")
 
     chessnet.save(SAVE_PATH)
+    shutil.make_archive(f"stats/{percentage:.2f}%", "zip", root_dir=str(SAVE_PATH))
