@@ -186,8 +186,8 @@ class NeuralNetwork(object):
 
     @staticmethod
     def cost_derivative(output_activations, y):
-        """Return the vector of partial derivatives \partial C_x /
-        \partial a for the output activations."""
+        """Return the vector of partial derivatives
+         of cost in respect of activations."""
         return (output_activations - y)
 
     def save(self, path: pathlib.Path) -> None:
@@ -231,7 +231,7 @@ if __name__ == "__main__":
             pieces[piece].append(image)
         training[piece] = pieces[piece][:int(SPLIT*len(pieces[piece]))]
         testing[piece] = pieces[piece][int(SPLIT*len(pieces[piece])):]
-    print(NeuralNetwork._array_from_image(testing["king"][0]))
+
     testing_data: list[tuple[np.ndarray, str]] = []
     for piece in PIECE_NAMES:
         for image in testing[piece]:
@@ -251,11 +251,6 @@ if __name__ == "__main__":
     else:
         with open("stats/results.csv", "w") as file:
             file.write(str(percentage))
-
-    array = NeuralNetwork._array_from_image(testing["bishop"][0])
-    output = chessnet.feedforward(array)
-    print(*zip(pieces.keys(), output))
-    print(NeuralNetwork.cost(output, "bishop"))
 
     training_data: list[tuple[np.ndarray, str]] = []
     for piece in PIECE_NAMES:
