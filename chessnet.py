@@ -152,12 +152,12 @@ class NeuralNetwork(object):
         to ``self.biases`` and ``self.weights``."""
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
-        # feedforward
-        activation = x
-        activations = [x] # list to store all the activations, layer by layer
+        # feedforward - First we do "inference", so we can compute the cost
+        activation = x # The activation in the first layer: the input
+        activations: list[np.ndarray] = [x] # list to store all the activations, layer by layer
         zs = [] # list to store all the z vectors, layer by layer
         for b, w in zip(self.biases, self.weights):
-            z = np.dot(w, activation)+b
+            z = np.dot(w, activation) + b # z = weight x activation + bias
             zs.append(z)
             activation = NeuralNetwork._sigmoid(z)
             activations.append(activation)
@@ -167,18 +167,23 @@ class NeuralNetwork(object):
             y_vec = np.zeros((len(sorted_values), 1))
             y_vec[y_index] = 1.0
         else:
-            y_vec = y
-        # backward pass
-        delta = NeuralNetwork.cost_derivative(activations[-1], y_vec) * NeuralNetwork._sigmoid_prime(zs[-1])
-        nabla_b[-1] = delta
+            y_vec = y # Where y_vec is the expected output (y in the book)
+        # backward pass (https://www.youtube.com/watch?v=tIeHLnjs5U8&list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi&index=5)
+        sp = NeuralNetwork._sigmoid_prime(zs[-1])
+        delta = NeuralNetwork.cost_derivative(activations[-1], y_vec) * sp
+        nabla_b[-1] = delta # Where delta is just the derivative of the cost in respect of z
+        # https://numpy.org/doc/stable/reference/generated/numpy.ndarray.transpose.html#numpy.ndarray.transpose
+        # The .transpose() method simply "rotates" a column into a row
+        # in order to enable a dot product between vectors
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
-        for l in range(2, self.layers_number):
-            z = zs[-l]
+        for l in range(2, self.layers_number): # Iterating over layers...
+            z = zs[-l] # ...kind of backwards
             sp = NeuralNetwork._sigmoid_prime(z)
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
-            nabla_b[-l] = delta
+            nabla_b[-l] = delta # Where delta is just the derivative of the cost in respect of z (includes the bias component)
             nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
-        return (nabla_b, nabla_w)
+            # Where nabla_w[-l] is just the derivative of the cost in respect of weight
+        return (nabla_b, nabla_w) # Returns the [opposite of the] gradients that must be applied
 
     def evaluate(self, test_data: list[tuple[np.ndarray, str | int]], sorted_values=None) -> int:
         """Return the number of test inputs for which the neural
