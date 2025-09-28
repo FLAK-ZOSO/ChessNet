@@ -145,7 +145,7 @@ class NeuralNetwork(object):
             for b, nb in zip(self.biases, nabla_b)
         ] # Iteration happens over layers
 
-    def backprop(self, x, y, sorted_values=None):
+    def backprop(self, x, y, sorted_values: list[str]=None):
         """Return a tuple ``(nabla_b, nabla_w)`` representing the
         gradient for the cost function C_x.  ``nabla_b`` and
         ``nabla_w`` are layer-by-layer lists of numpy arrays, similar
@@ -210,7 +210,7 @@ class NeuralNetwork(object):
     def cost_derivative(output_activations, y):
         """Return the vector of partial derivatives
          of cost in respect of activations."""
-        return (output_activations - y)
+        return 2 * (output_activations - y)
 
     def save(self, path: pathlib.Path) -> None:
         weights_dir = path / "weights"
@@ -263,7 +263,7 @@ if __name__ == "__main__":
     if pathlib.Path(SAVE_PATH).exists():
         chessnet = NeuralNetwork.load(SAVE_PATH)
     else:
-        chessnet = NeuralNetwork([85*85, 20, 25, 6])
+        chessnet = NeuralNetwork([85*85, 25, 25, 6])
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
     percentage = evaluate / len(testing_data) * 100
@@ -279,7 +279,7 @@ if __name__ == "__main__":
     for piece in PIECE_NAMES:
         for image in training[piece]:
             training_data.append((NeuralNetwork._array_from_image(image), piece))
-    chessnet.stochastic_gradient_descent(training_data, 10, 20, 1, PIECE_NAMES)
+    chessnet.stochastic_gradient_descent(training_data, 30, 20, 0.5, PIECE_NAMES)
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
     percentage = evaluate / len(testing_data) * 100
