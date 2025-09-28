@@ -6,3 +6,4 @@ __pycache__/
 data/
 stats/results.*
 stats/*%.zip
+testNet/
