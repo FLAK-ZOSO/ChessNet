@@ -84,6 +84,7 @@ class NeuralNetwork(object):
                              f" in_values has {in_values.size} values," \
                              f" {self.layer_sizes[0]} expected by network")
         for weights, bias in zip(self.weights, self.biases): # Iterating over layers
+            # Propagating forward to the next layer as σ(weights x in_values) + bias
             in_values = NeuralNetwork._sigmoid(weights.dot(in_values) + bias)
         return in_values
 
@@ -102,7 +103,8 @@ class NeuralNetwork(object):
             random.shuffle(training_data)
             mini_batches = [
                 training_data[k:k+mini_batch_size]
-                for k in range(0, n, mini_batch_size)]
+                for k in range(0, n, mini_batch_size)
+            ] # Divide into equal sized batches
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta, sorted_values)
             if test_data:
@@ -113,21 +115,35 @@ class NeuralNetwork(object):
                 print("\rEpoch {0} complete".format(j), end='')
         print()
 
-    def update_mini_batch(self, mini_batch, eta, sorted_values=None):
+    def update_mini_batch(self, mini_batch: list[tuple[np.ndarray, str]], eta, sorted_values=None):
         """Update the network's weights and biases by applying
         gradient descent using backpropagation to a single mini batch.
         The ``mini_batch`` is a list of tuples ``(x, y)``, and ``eta``
         is the learning rate."""
+        # These two nabla_* vectors contain the derivatives of
+        # the cost in respect of biases and weights: basically
+        # the gradient we aim to follow; The term "nabla" (∇)
+        # is a mathematical symbol commonly used to denote gradients.
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
-        for x, y in mini_batch:
+        for x, y in mini_batch: # Iterating over samples
+            # x is the input layer, y is the correct guess
             delta_nabla_b, delta_nabla_w = self.backprop(x, y, sorted_values)
+            # Each element in the zip is a layer; we sum up
+            # gradients with the deltas returned by the backpropagation
             nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
-        self.weights = [w-(eta/len(mini_batch))*nw
-                        for w, nw in zip(self.weights, nabla_w)]
-        self.biases = [b-(eta/len(mini_batch))*nb
-                       for b, nb in zip(self.biases, nabla_b)]
+        # Each sample in the mini batch influences the network
+        # by a fraction of the "eta" learning factor
+        mini_eta = eta/len(mini_batch)
+        self.weights = [
+            w - mini_eta*nw
+            for w, nw in zip(self.weights, nabla_w)
+        ] # Iteration happens over layers
+        self.biases = [
+            b - mini_eta*nb
+            for b, nb in zip(self.biases, nabla_b)
+        ] # Iteration happens over layers
 
     def backprop(self, x, y, sorted_values=None):
         """Return a tuple ``(nabla_b, nabla_w)`` representing the
