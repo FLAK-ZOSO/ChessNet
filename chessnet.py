@@ -15,7 +15,7 @@ import numpy as np
 
 class NeuralNetwork(object):
 
-    def __init__(self, layer_sizes: list[int]=None):
+    def __init__(self, layer_sizes: list[int]=None, *, decay: float=None):
         if layer_sizes is not None:
             self.layers_number = len(layer_sizes)
             self.layer_sizes = layer_sizes
@@ -30,6 +30,7 @@ class NeuralNetwork(object):
                 np.random.randn(y, 1) # Random vector of biases 
                 for y in self.layer_sizes[1:] # exclude first layer
             ]
+        self.decay = decay if decay is not None else 0.1
 
     @classmethod
     def load(cls, directory: pathlib.Path) -> NeuralNetwork:
@@ -97,22 +98,30 @@ class NeuralNetwork(object):
         network will be evaluated against the test data after each
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
-        if test_data: n_test = len(test_data)
+        if test_data:
+            n_test = len(test_data)
         n = len(training_data)
-        for j in range(epochs):
-            random.shuffle(training_data)
-            mini_batches = [
-                training_data[k:k+mini_batch_size]
-                for k in range(0, n, mini_batch_size)
-            ] # Divide into equal sized batches
-            for mini_batch in mini_batches:
-                self.update_mini_batch(mini_batch, eta, sorted_values)
-            if test_data:
-                print("Epoch {0}: {1} / {2}".format(
-                    j, self.evaluate(test_data), n_test
-                ))
-            else:
-                print("\rEpoch {0} complete".format(j), end='')
+        lrate = eta
+        if not pathlib.Path("stats/learning-rates.csv").exists():
+            with open("stats/learning-rates.csv", "w") as file:
+                file.write(str(eta))
+        with open("stats/learning-rates.csv", "a") as file:
+            for j in range(epochs):
+                random.shuffle(training_data)
+                mini_batches = [
+                    training_data[k:k+mini_batch_size]
+                    for k in range(0, n, mini_batch_size)
+                ] # Divide into equal sized batches
+                for mini_batch in mini_batches:
+                    self.update_mini_batch(mini_batch, lrate, sorted_values)
+                lrate = eta * (1 / (1 + self.decay * j))
+                file.write(f", {lrate}")
+                if test_data:
+                    print("Epoch {0}: {1} / {2}".format(
+                        j, self.evaluate(test_data), n_test
+                    ))
+                else:
+                    print("\rEpoch {0} complete".format(j), end='')
         print()
 
     def update_mini_batch(self, mini_batch: list[tuple[np.ndarray, str]], eta, sorted_values=None):
@@ -270,7 +279,7 @@ if __name__ == "__main__":
     if pathlib.Path(SAVE_PATH).exists():
         chessnet = NeuralNetwork.load(SAVE_PATH)
     else:
-        chessnet = NeuralNetwork([85*85, 10, 10, 6])
+        chessnet = NeuralNetwork([85*85, 25, 15, 6])
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
     percentage = evaluate / len(testing_data) * 100
