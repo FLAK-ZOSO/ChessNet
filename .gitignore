@@ -6,5 +6,6 @@ __pycache__/
 data/
 stats/results.*
 stats/cost.*
+stats/learning-rates.*
 stats/*%.zip
 testNet/
