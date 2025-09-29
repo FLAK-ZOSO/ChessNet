@@ -145,7 +145,7 @@ class NeuralNetwork(object):
             for b, nb in zip(self.biases, nabla_b)
         ] # Iteration happens over layers
 
-    def backprop(self, x, y, sorted_values: list[str]=None):
+    def backprop(self, x: np.ndarray, y: str, sorted_values: list[str]=None):
         """Return a tuple ``(nabla_b, nabla_w)`` representing the
         gradient for the cost function C_x.  ``nabla_b`` and
         ``nabla_w`` are layer-by-layer lists of numpy arrays, similar
@@ -170,6 +170,12 @@ class NeuralNetwork(object):
             y_vec = y # Where y_vec is the expected output (y in the book)
         # backward pass (https://www.youtube.com/watch?v=tIeHLnjs5U8&list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi&index=5)
         sp = NeuralNetwork._sigmoid_prime(zs[-1])
+        if pathlib.Path("stats/cost.csv").exists():
+            with open("stats/cost.csv", "a") as file:
+                file.write(f", {NeuralNetwork.cost(activations[-1], y)}")
+        else:
+            with open("stats/cost.csv", "w") as file:
+                file.write(f"{NeuralNetwork.cost(activations[-1], y)}")
         delta = NeuralNetwork.cost_derivative(activations[-1], y_vec) * sp
         nabla_b[-1] = delta # Where delta is just the derivative of the cost in respect of z
         # https://numpy.org/doc/stable/reference/generated/numpy.ndarray.transpose.html#numpy.ndarray.transpose
@@ -264,7 +270,7 @@ if __name__ == "__main__":
     if pathlib.Path(SAVE_PATH).exists():
         chessnet = NeuralNetwork.load(SAVE_PATH)
     else:
-        chessnet = NeuralNetwork([85*85, 25, 25, 6])
+        chessnet = NeuralNetwork([85*85, 10, 10, 6])
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
     percentage = evaluate / len(testing_data) * 100
