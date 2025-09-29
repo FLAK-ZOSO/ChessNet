@@ -203,8 +203,9 @@ class NeuralNetwork(object):
         return [(output[i] - (1 if i == correct else 0)) for i in range(len(output))]
 
     @staticmethod
-    def cost(output: np.ndarray, correct: str | int, sorted_values: list[str]=None) -> int:
-        return sum([x**2 for x in NeuralNetwork.costs(output, correct, sorted_values)])
+    def cost(output: np.ndarray, correct: str | int, sorted_values: list[str]=None) -> float:
+        costs = NeuralNetwork.costs(output, correct, sorted_values)
+        return float(np.sum(np.square(costs)))
 
     @staticmethod
     def cost_derivative(output_activations, y):
