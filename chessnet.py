@@ -30,7 +30,7 @@ class NeuralNetwork(object):
                 np.random.randn(y, 1) # Random vector of biases 
                 for y in self.layer_sizes[1:] # exclude first layer
             ]
-        self.decay = decay if decay is not None else 0.1
+        self.decay = decay if decay is not None else 0.01
 
     @classmethod
     def load(cls, directory: pathlib.Path) -> NeuralNetwork:
@@ -268,8 +268,8 @@ if __name__ == "__main__":
             image = image.convert("L")
             image.format = "PNG"
             pieces[piece].append(image)
-        training[piece] = pieces[piece][:int(SPLIT*len(pieces[piece]))]
-        testing[piece] = pieces[piece][int(SPLIT*len(pieces[piece])):]
+        training[piece] = pieces[piece][-int(SPLIT*len(pieces[piece])):]
+        testing[piece] = pieces[piece][:-int(SPLIT*len(pieces[piece]))]
 
     testing_data: list[tuple[np.ndarray, str]] = []
     for piece in PIECE_NAMES:
@@ -279,7 +279,7 @@ if __name__ == "__main__":
     if pathlib.Path(SAVE_PATH).exists():
         chessnet = NeuralNetwork.load(SAVE_PATH)
     else:
-        chessnet = NeuralNetwork([85*85, 25, 15, 6])
+        chessnet = NeuralNetwork([85*85, 40, 20, 10, 6])
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
     percentage = evaluate / len(testing_data) * 100
