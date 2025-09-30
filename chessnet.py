@@ -200,11 +200,9 @@ class NeuralNetwork(object):
             # Where nabla_w[-l] is just the derivative of the cost in respect of weight
         return (nabla_b, nabla_w) # Returns the [opposite of the] gradients that must be applied
 
-    def evaluate(self, test_data: list[tuple[np.ndarray, str | int]], sorted_values=None) -> int:
+    def evaluate(self, test_data: list[tuple[np.ndarray, str | int]], sorted_values: list[str]) -> int:
         """Return the number of test inputs for which the neural
         network outputs the correct result."""
-        if sorted_values is None:
-            raise ValueError("sorted_values (class names) must be provided for evaluation.")
         test_results = [
             (np.argmax(self.feedforward(x)), sorted_values.index(y) if isinstance(y, str) else y)
             for (x, y) in test_data
