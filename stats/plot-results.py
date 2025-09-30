@@ -29,7 +29,7 @@ with open("../chessnet.yml", "r") as file:
 
 plt.figure(figsize=(10, 6))
 # Set y axis to display percentages and the x axis to represent epochs (scalar)
-plt.gca().yaxis.set_major_formatter(tkr.PercentFormatter())
+plt.gca().yaxis.set_major_formatter(tkr.PercentFormatter(xmax=100))
 plt.gca().xaxis.set_major_formatter(tkr.ScalarFormatter())
 plt.gca().xaxis.set_major_locator(tkr.MultipleLocator(EPOCHS))
 # plt.gca().xaxis.set_minor_locator(tkr.MultipleLocator(10))

@@ -49,6 +49,7 @@ class NeuralNetwork(object):
         for entry in sorted(os.listdir(directory / "biases")):
             if entry.endswith(".npy"):
                 network.biases.append(np.load(directory / "biases" / entry))
+        network.decay = DECAY
         return network
 
     @staticmethod
@@ -250,6 +251,7 @@ SAVE_PATH = pathlib.Path(r"testNet")
 SPLIT = 0.8
 BATCH = 20
 ETA = 0.5
+DECAY = 0.01
 
 INPUT_SIZE_X = 85
 INPUT_SIZE_Y = 85
@@ -267,6 +269,7 @@ if __name__ == "__main__":
         SPLIT = config["split"]
         BATCH = config["batch"]
         ETA = config["eta"]
+        DECAY = config["decay"]
         INPUT_SIZE_X: int = config["input-size"]["x"] if "input-size" in config else INPUT_SIZE_X
         INPUT_SIZE_Y: int = config["input-size"]["y"] if "input-size" in config else INPUT_SIZE_Y
         INNER_LAYER_SIZES: list[int] = config["inner-layer-sizes"] if "inner-layer-sizes" in config else INNER_LAYER_SIZES
@@ -304,7 +307,7 @@ if __name__ == "__main__":
     else:
         print("Generating random neural network...")
         chessnet = NeuralNetwork(
-            [INPUT_SIZE_X * INPUT_SIZE_Y] + INNER_LAYER_SIZES + [OUTPUT_SIZE]
+            [INPUT_SIZE_X * INPUT_SIZE_Y] + INNER_LAYER_SIZES + [OUTPUT_SIZE], decay=DECAY
         )
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
