@@ -268,8 +268,8 @@ if __name__ == "__main__":
             image = image.convert("L")
             image.format = "PNG"
             pieces[piece].append(image)
-        training[piece] = pieces[piece][-int(SPLIT*len(pieces[piece])):]
-        testing[piece] = pieces[piece][:-int(SPLIT*len(pieces[piece]))]
+        testing[piece] = pieces[piece][0:len(pieces[piece]):(SPLIT*10).__ceil__()]
+        training[piece] = [value for value in pieces[piece] if value not in testing[piece]]
 
     testing_data: list[tuple[np.ndarray, str]] = []
     for piece in PIECE_NAMES:
