@@ -9,5 +9,5 @@ input-size:
   x: 85
   y: 85
 inner-layer-sizes:
-  - 16
+  - 30
 output-size: 6
