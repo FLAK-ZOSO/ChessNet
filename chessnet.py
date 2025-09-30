@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import io
+import sys
 import time
 import yaml
 import pathlib
@@ -207,6 +208,9 @@ class NeuralNetwork(object):
             (np.argmax(self.feedforward(x)), sorted_values.index(y) if isinstance(y, str) else y)
             for (x, y) in test_data
         ]
+        for x, y in test_results:
+            if x != y:
+                print(f"Guessed {sorted_values[y]} but was {sorted_values[x]}!", file=sys.stderr)
         return sum(int(x == y) for (x, y) in test_results)
 
     @staticmethod
@@ -287,6 +291,7 @@ if __name__ == "__main__":
             pieces[piece].append(image)
         testing[piece] = pieces[piece][0:len(pieces[piece]):(SPLIT*10).__ceil__()]
         training[piece] = [value for value in pieces[piece] if value not in testing[piece]]
+        print(f"The data for {piece}s consists of {len(testing[piece])} samples for testing and {len(training[piece])} for training")
 
     testing_data: list[tuple[np.ndarray, str]] = []
     for piece in PIECE_NAMES:
@@ -294,8 +299,10 @@ if __name__ == "__main__":
             testing_data.append((NeuralNetwork._array_from_image(image), piece))
 
     if pathlib.Path(SAVE_PATH).exists():
+        print("Loading the saved neural network...")
         chessnet = NeuralNetwork.load(SAVE_PATH)
     else:
+        print("Generating random neural network...")
         chessnet = NeuralNetwork(
             [INPUT_SIZE_X * INPUT_SIZE_Y] + INNER_LAYER_SIZES + [OUTPUT_SIZE]
         )
