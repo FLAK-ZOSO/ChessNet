@@ -18,3 +18,4 @@ If the learning rate is too high (>5) the accuracy will behave quite randomly an
 
 - the accuracy going down doesn't imply that the cost is going up, since accuracy is discrete (either you guess the chess piece or you don't) and is thus only loosely related to the cost
 - if the overall cost grows, then we are moving from one concavity to one other, potentially reaching a new local minimum
+- the shallower the network (less layers), the hardest it is to minimize the cost function; however, the accuracy can sometimes even improve
