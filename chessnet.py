@@ -4,12 +4,12 @@ from __future__ import annotations
 import os
 import io
 import time
+import yaml
 import pathlib
 import shutil
 import random
 import kagglehub
 from PIL import Image
-import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -244,13 +244,32 @@ class NeuralNetwork(object):
 DATA_PATH = pathlib.Path(r"/home/flak-zoso/.cache/kagglehub/datasets/s4lman/chess-pieces-dataset-85x85/versions/2/data")
 DATA_DESTINATION = pathlib.Path(r"./data")
 SAVE_PATH = pathlib.Path(r"testNet")
-SPLIT = 0.8
 
+SPLIT = 0.8
+BATCH = 20
+ETA = 0.5
+
+INPUT_SIZE_X = 85
+INPUT_SIZE_Y = 85
+INNER_LAYER_SIZES = [10, 10]
+OUTPUT_SIZE = 6
 
 if __name__ == "__main__":
     np.random.seed(int(time.time()))
     if not DATA_PATH.exists():
         DATA_PATH = pathlib.Path(kagglehub.dataset_download("s4lman/chess-pieces-dataset-85x85")) / 'data'
+
+    with open("chessnet.yml", "r") as file:
+        config = yaml.safe_load(file)
+        EPOCHS = config["epochs"]
+        SPLIT = config["split"]
+        BATCH = config["batch"]
+        ETA = config["eta"]
+        INPUT_SIZE_X: int = config["input-size"]["x"] if "input-size" in config else INPUT_SIZE_X
+        INPUT_SIZE_Y: int = config["input-size"]["y"] if "input-size" in config else INPUT_SIZE_Y
+        INNER_LAYER_SIZES: list[int] = config["inner-layer-sizes"] if "inner-layer-sizes" in config else INNER_LAYER_SIZES
+        OUTPUT_SIZE: int = config["output-size"] if "output-size" in config else OUTPUT_SIZE
+
     pieces: dict[str, list[bytes]] = {}
     training: dict[str, list[bytes]] = {}
     testing: dict[str, list[bytes]] = {}
@@ -279,7 +298,9 @@ if __name__ == "__main__":
     if pathlib.Path(SAVE_PATH).exists():
         chessnet = NeuralNetwork.load(SAVE_PATH)
     else:
-        chessnet = NeuralNetwork([85*85, 80, 40, 20, 10, 6])
+        chessnet = NeuralNetwork(
+            [INPUT_SIZE_X * INPUT_SIZE_Y] + INNER_LAYER_SIZES + [OUTPUT_SIZE]
+        )
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
     percentage = evaluate / len(testing_data) * 100
@@ -295,7 +316,7 @@ if __name__ == "__main__":
     for piece in PIECE_NAMES:
         for image in training[piece]:
             training_data.append((NeuralNetwork._array_from_image(image), piece))
-    chessnet.stochastic_gradient_descent(training_data, 30, 20, 0.5, PIECE_NAMES)
+    chessnet.stochastic_gradient_descent(training_data, EPOCHS, BATCH, ETA, PIECE_NAMES)
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
     percentage = evaluate / len(testing_data) * 100
