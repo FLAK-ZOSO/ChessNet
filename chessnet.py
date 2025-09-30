@@ -279,7 +279,7 @@ if __name__ == "__main__":
     if pathlib.Path(SAVE_PATH).exists():
         chessnet = NeuralNetwork.load(SAVE_PATH)
     else:
-        chessnet = NeuralNetwork([85*85, 40, 20, 10, 6])
+        chessnet = NeuralNetwork([85*85, 80, 40, 20, 10, 6])
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
     percentage = evaluate / len(testing_data) * 100
