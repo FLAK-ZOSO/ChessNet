@@ -6,8 +6,8 @@ eta: 0.3
 decay: 0.1
 
 input-size:
-  x: 85
-  y: 85
+  x: 64
+  y: 64
 inner-layer-sizes:
-  - 30
-output-size: 6
+  - 80
+output-size: 39

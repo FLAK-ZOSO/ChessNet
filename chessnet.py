@@ -244,7 +244,8 @@ class NeuralNetwork(object):
             np.save(weights_dir / f"{index}.npy", layer, allow_pickle=False)
             np.savetxt(weights_dir / f"{index}.csv", layer)
 
-DATA_PATH = pathlib.Path(r"/home/flak-zoso/.cache/kagglehub/datasets/s4lman/chess-pieces-dataset-85x85/versions/2/data")
+DATASET = "mahmoudreda55/arabic-letters-numbers-ocr"
+DATA_PATH = pathlib.Path(rf"/home/flak-zoso/.cache/kagglehub/datasets/{DATASET}/versions/4")
 DATA_DESTINATION = pathlib.Path(r"./data")
 SAVE_PATH = pathlib.Path(r"testNet")
 
@@ -261,7 +262,7 @@ OUTPUT_SIZE = 6
 if __name__ == "__main__":
     np.random.seed(int(time.time()))
     if not DATA_PATH.exists():
-        DATA_PATH = pathlib.Path(kagglehub.dataset_download("s4lman/chess-pieces-dataset-85x85")) / 'data'
+        DATA_PATH = pathlib.Path(kagglehub.dataset_download(DATASET)) / 'Dataset'
 
     with open("chessnet.yml", "r") as file:
         config = yaml.safe_load(file)
@@ -282,13 +283,19 @@ if __name__ == "__main__":
         shutil.copytree(str(DATA_PATH), str(DATA_DESTINATION))
     except FileExistsError:
         pass
-    PIECE_NAMES = sorted([*os.listdir(DATA_DESTINATION)])
+    PIECE_NAMES = sorted([*os.listdir(DATA_DESTINATION / "Dataset")])
     for piece in PIECE_NAMES:
-        piece_path = DATA_DESTINATION / piece
+        piece_path = DATA_DESTINATION / "Dataset" / piece
         pieces[piece] = []
         for image in os.listdir(piece_path):
+            if not image.endswith("png"):
+                continue
+            if int(image.removesuffix(".png").removesuffix("w")) >= 400:
+                continue
             with open(str(piece_path / image), "rb") as file:
                 image = Image.open(io.BytesIO(file.read()))
+            if image.size[0] != INPUT_SIZE_X or image.size[1] != INPUT_SIZE_Y:
+                continue
             image = image.convert("L")
             image.format = "PNG"
             pieces[piece].append(image)
@@ -323,7 +330,7 @@ if __name__ == "__main__":
     training_data: list[tuple[np.ndarray, str]] = []
     for piece in PIECE_NAMES:
         for image in training[piece]:
-            training_data.append((NeuralNetwork._array_from_image(image), piece))
+            training_data.append((arr := NeuralNetwork._array_from_image(image), piece))
     chessnet.stochastic_gradient_descent(training_data, EPOCHS, BATCH, ETA, PIECE_NAMES)
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
