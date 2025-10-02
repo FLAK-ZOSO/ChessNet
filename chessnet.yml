@@ -2,13 +2,13 @@
 epochs: 5
 split: 0.7
 batch: 20
-eta: 0.3
+eta: 0.4
 decay: 0.1
 
 input-size:
   x: 85
   y: 85
 inner-layer-sizes:
-  - 30
+  - 35
   - 20
 output-size: 6
