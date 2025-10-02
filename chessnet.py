@@ -284,13 +284,13 @@ if __name__ == "__main__":
     except FileExistsError:
         pass
     PIECE_NAMES = sorted([*os.listdir(DATA_DESTINATION / "Dataset")])
+    valid_pieces = []
     for piece in PIECE_NAMES:
         piece_path = DATA_DESTINATION / "Dataset" / piece
         pieces[piece] = []
-        for image in os.listdir(piece_path):
+        images = os.listdir(piece_path)
+        for image in images[:400]:
             if not image.endswith("png"):
-                continue
-            if int(image.removesuffix(".png").removesuffix("w")) >= 400:
                 continue
             with open(str(piece_path / image), "rb") as file:
                 image = Image.open(io.BytesIO(file.read()))
@@ -299,9 +299,13 @@ if __name__ == "__main__":
             image = image.convert("L")
             image.format = "PNG"
             pieces[piece].append(image)
+        if len(pieces[piece]) <= 300:
+            continue
         testing[piece] = pieces[piece][0:len(pieces[piece]):(SPLIT*10).__ceil__()]
         training[piece] = [value for value in pieces[piece] if value not in testing[piece]]
         print(f"The data for {piece}s consists of {len(testing[piece])} samples for testing and {len(training[piece])} for training")
+        valid_pieces.append(piece)
+    PIECE_NAMES = list(sorted(valid_pieces))
 
     testing_data: list[tuple[np.ndarray, str]] = []
     for piece in PIECE_NAMES:
