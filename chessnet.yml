@@ -10,4 +10,5 @@ input-size:
   y: 85
 inner-layer-sizes:
   - 30
+  - 20
 output-size: 6
