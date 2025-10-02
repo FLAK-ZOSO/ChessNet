@@ -312,6 +312,11 @@ if __name__ == "__main__":
         for image in testing[piece]:
             testing_data.append((NeuralNetwork._array_from_image(image), piece))
 
+    if len(PIECE_NAMES) != OUTPUT_SIZE:
+        print(f"Switching OUTPUT_SIZE to {len(PIECE_NAMES)}")
+        OUTPUT_SIZE = len(PIECE_NAMES)
+        print(f"Consider changing output-size in your configuration to {len(PIECE_NAMES)}")
+
     if pathlib.Path(SAVE_PATH).exists():
         print("Loading the saved neural network...")
         chessnet = NeuralNetwork.load(SAVE_PATH)
