@@ -283,10 +283,10 @@ if __name__ == "__main__":
         shutil.copytree(str(DATA_PATH), str(DATA_DESTINATION))
     except FileExistsError:
         pass
-    PIECE_NAMES = sorted([*os.listdir(DATA_DESTINATION / "Dataset")])
+    PIECE_NAMES = sorted([*os.listdir(DATA_DESTINATION)])
     valid_pieces = []
     for piece in PIECE_NAMES:
-        piece_path = DATA_DESTINATION / "Dataset" / piece
+        piece_path = DATA_DESTINATION / piece
         pieces[piece] = []
         images = os.listdir(piece_path)
         for image in images[:400]:
