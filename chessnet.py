@@ -288,7 +288,7 @@ if __name__ == "__main__":
     for piece in PIECE_NAMES:
         piece_path = DATA_DESTINATION / piece
         pieces[piece] = []
-        images = os.listdir(piece_path)
+        images = sorted(os.listdir(piece_path))
         for image in images[:400]:
             if not image.endswith("png"):
                 continue
