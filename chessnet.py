@@ -69,7 +69,7 @@ class NeuralNetwork(object):
 
     @staticmethod
     def _array_from_image(img: Image.Image) -> np.ndarray:
-        return (np.array(img).astype(np.float32) / 255.0).flatten().reshape(-1, 1)
+        return (np.asarray(img).astype(np.float32) / 255.0).flatten().reshape(-1, 1)
 
     def feedforward(self, in_values: np.ndarray) -> np.ndarray:
         '''The output of the network given an input
@@ -255,6 +255,7 @@ DECAY = 0.01
 
 INPUT_SIZE_X = 85
 INPUT_SIZE_Y = 85
+CHANNELS = 3
 INNER_LAYER_SIZES = [10, 10]
 OUTPUT_SIZE = 6
 
@@ -289,7 +290,7 @@ if __name__ == "__main__":
         for image in os.listdir(piece_path):
             with open(str(piece_path / image), "rb") as file:
                 image = Image.open(io.BytesIO(file.read()))
-            image = image.convert("L")
+            image = image.convert("RGB")
             image.format = "PNG"
             pieces[piece].append(image)
         testing[piece] = pieces[piece][0:len(pieces[piece]):(SPLIT*10).__ceil__()]
@@ -306,8 +307,9 @@ if __name__ == "__main__":
         chessnet = NeuralNetwork.load(SAVE_PATH)
     else:
         print("Generating random neural network...")
+        input_neurons = INPUT_SIZE_X * INPUT_SIZE_Y * CHANNELS
         chessnet = NeuralNetwork(
-            [INPUT_SIZE_X * INPUT_SIZE_Y] + INNER_LAYER_SIZES + [OUTPUT_SIZE], decay=DECAY
+            [input_neurons] + INNER_LAYER_SIZES + [OUTPUT_SIZE], decay=DECAY
         )
 
     evaluate = chessnet.evaluate(testing_data, PIECE_NAMES)
